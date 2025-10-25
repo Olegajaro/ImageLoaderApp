@@ -17,7 +17,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = scene as? UIWindowScene else { return }
         
         let window = UIWindow(windowScene: windowScene)
-        let rootVC = ViewController()
+        let rootVC = ImagesCollectionViewController()
         let nav = UINavigationController(rootViewController: rootVC)
         window.rootViewController = nav
         self.window = window
