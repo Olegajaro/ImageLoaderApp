@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ImageCollectionViewCell: UICollectionViewCell {
+final class ImageCollectionViewCell: UICollectionViewCell {
     static let reuseIdentifier = String(describing: ImageCollectionViewCell.self)
     private(set) var isImageLoaded = false
 
@@ -28,23 +28,25 @@ class ImageCollectionViewCell: UICollectionViewCell {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        
         setupViews()
     }
 
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        super.init(coder: coder)
+        setupViews()
+    }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        imageView.image = nil
+        spinner.stopAnimating()
+        isImageLoaded = false
     }
 }
 
 // MARK: - Public Methods
 extension ImageCollectionViewCell {
-    func prepareForReuseState() {
-        imageView.image = nil
-        spinner.stopAnimating()
-        isImageLoaded = false
-    }
-
     func showLoading() {
         spinner.startAnimating()
         isImageLoaded = false

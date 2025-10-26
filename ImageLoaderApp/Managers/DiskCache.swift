@@ -28,8 +28,9 @@ final class DiskCache {
     }
     
     func save(_ image: UIImage, for url: URL) {
-        ioQueue.async {
-            let fileURL = self.filePath(for: url)
+        ioQueue.async { [weak self] in
+            guard let self else { return }
+            let fileURL = filePath(for: url)
             guard let data = image.pngData() else { return }
             try? data.write(to: fileURL, options: [.atomic])
         }
@@ -37,15 +38,11 @@ final class DiskCache {
     
     func deleteCache() {
         ioQueue.async { [weak self] in
-            guard let self else { return }
-            do {
-                if self.fileManager.fileExists(atPath: self.cacheDirectory.path) {
-                    try self.fileManager.removeItem(at: self.cacheDirectory)
-                }
-                self.createCacheDirectoryIfNeeded() 
-            } catch {
-                print("DiskCache delete error:", error)
-            }
+            guard
+                let self, fileManager.fileExists(atPath: self.cacheDirectory.path())
+            else { return }
+            try? fileManager.removeItem(at: self.cacheDirectory)
+            createCacheDirectoryIfNeeded()
         }
     }
     
@@ -60,8 +57,7 @@ final class DiskCache {
     }
     
     private func createCacheDirectoryIfNeeded() {
-        if !fileManager.fileExists(atPath: cacheDirectory.path) {
-            try? fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
-        }
+        guard !fileManager.fileExists(atPath: cacheDirectory.path) else { return }
+        try? fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
     }
 }
