@@ -8,13 +8,13 @@
 import UIKit
 
 final class ImagesCollectionViewController: UIViewController {
-
+    
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.minimumLineSpacing = 10
         layout.minimumInteritemSpacing = 0
         layout.sectionInset = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
-
+        
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .systemBackground
         collectionView.dataSource = self
@@ -27,7 +27,7 @@ final class ImagesCollectionViewController: UIViewController {
     }()
     
     private let imageLoader = ImageLoader()
-    private let imageURLs = [
+    private var imageURLs = [
         URL(string: "https://placehold.co/800x600/1E90FF/FFFFFF/png?text=Ocean+Blue")!,
         URL(string: "https://placehold.co/800x600/FF8C00/FFFFFF/png?text=Sunset+Orange")!,
         URL(string: "https://placehold.co/800x600/32CD32/FFFFFF/png?text=Fresh+Green")!,
@@ -42,7 +42,7 @@ final class ImagesCollectionViewController: UIViewController {
         
         setupViews()
     }
-
+    
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         
@@ -50,7 +50,7 @@ final class ImagesCollectionViewController: UIViewController {
     }
 }
 
-// MARK: - Setup Views
+// MARK: - Setup Views & Helpers
 private extension ImagesCollectionViewController {
     func setupViews() {
         view.backgroundColor = .systemBackground
@@ -61,7 +61,7 @@ private extension ImagesCollectionViewController {
     
     func setupNavBar() {
         title = "Images"
-
+        
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationItem.largeTitleDisplayMode = .always
     }
@@ -74,6 +74,20 @@ private extension ImagesCollectionViewController {
             collectionView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
             collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+    }
+    
+    func performBatchUpdate(on collectionView: UICollectionView,
+                            newURLs: [URL],
+                            indexPath: IndexPath) {
+        self.imageURLs = newURLs
+        
+        collectionView.performBatchUpdates {
+            collectionView.deleteItems(at: [indexPath])
+        } completion: { _ in
+            UIView.animate(withDuration: 0.25) {
+                collectionView.layoutIfNeeded()
+            }
+        }
     }
 }
 
@@ -105,6 +119,32 @@ extension ImagesCollectionViewController: UICollectionViewDelegateFlowLayout {
         let width = collectionView.bounds.width - CGFloat(totalHorizontalPadding)
         let itemSize = CGSize(width: width, height: width) // height == width
         return itemSize
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        guard
+            let cell = collectionView.cellForItem(at: indexPath) as? ImageCollectionViewCell
+        else { return }
+        
+        guard cell.isImageLoaded else { return }
+        
+        UIView.animate(withDuration: 0.3, animations: {
+            cell.transform = CGAffineTransform(translationX: collectionView.bounds.width, y: 0)
+            cell.alpha = 0.0
+        }, completion: { [weak self] _ in
+            guard let self else { return }
+            
+            // Update dataSource
+            var updatedURLs = self.imageURLs
+            updatedURLs.remove(at: indexPath.item)
+            
+            // delete item with animation
+            self.performBatchUpdate(
+                on: collectionView,
+                newURLs: updatedURLs,
+                indexPath: indexPath
+            )
+        })
     }
     
     func collectionView(_ collectionView: UICollectionView,

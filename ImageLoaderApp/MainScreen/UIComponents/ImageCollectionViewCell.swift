@@ -9,6 +9,7 @@ import UIKit
 
 class ImageCollectionViewCell: UICollectionViewCell {
     static let reuseIdentifier = String(describing: ImageCollectionViewCell.self)
+    private(set) var isImageLoaded = false
 
     private let imageView: UIImageView = {
         let imageView = UIImageView()
@@ -41,15 +42,18 @@ extension ImageCollectionViewCell {
     func prepareForReuseState() {
         imageView.image = nil
         spinner.stopAnimating()
+        isImageLoaded = false
     }
 
     func showLoading() {
         spinner.startAnimating()
+        isImageLoaded = false
     }
 
     func configure(with image: UIImage) {
         spinner.stopAnimating()
         imageView.image = image
+        isImageLoaded = true
     }
 
     func configureWithPlaceholder() {
@@ -57,6 +61,7 @@ extension ImageCollectionViewCell {
         // simple placeholder
         imageView.image = UIImage(systemName: "exclamationmark.triangle")
         imageView.tintColor = .systemOrange
+        isImageLoaded = false
     }
 }
 
