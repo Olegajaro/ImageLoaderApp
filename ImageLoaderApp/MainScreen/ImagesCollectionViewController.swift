@@ -26,6 +26,16 @@ final class ImagesCollectionViewController: UIViewController {
         return collectionView
     }()
     
+    private let imageLoader = ImageLoader()
+    private let imageURLs = [
+        URL(string: "https://placehold.co/800x600/1E90FF/FFFFFF/png?text=Ocean+Blue")!,
+        URL(string: "https://placehold.co/800x600/FF8C00/FFFFFF/png?text=Sunset+Orange")!,
+        URL(string: "https://placehold.co/800x600/32CD32/FFFFFF/png?text=Fresh+Green")!,
+        URL(string: "https://placehold.co/800x600/8A2BE2/FFFFFF/png?text=Purple+Vibe")!,
+        URL(string: "https://placehold.co/800x600/DC143C/FFFFFF/png?text=Crimson+Red")!,
+        URL(string: "https://placehold.co/800x600/2F4F4F/FFFFFF/png?text=Dark+Slate")!,
+    ]
+    
     // MARK: - Lifecycle Methods
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -71,7 +81,7 @@ private extension ImagesCollectionViewController {
 extension ImagesCollectionViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView,
                         numberOfItemsInSection section: Int) -> Int {
-        6
+        imageURLs.count
     }
     
     func collectionView(_ collectionView: UICollectionView,
@@ -101,7 +111,28 @@ extension ImagesCollectionViewController: UICollectionViewDelegateFlowLayout {
                         willDisplay cell: UICollectionViewCell,
                         forItemAt indexPath: IndexPath) {
         guard let cell = cell as? ImageCollectionViewCell else { return }
+        let url = imageURLs[indexPath.item]
         cell.showLoading()
+        imageLoader.loadImage(from: url) { [weak cell] result in
+            DispatchQueue.main.async {
+                guard let cell = cell else { return }
+                switch result {
+                case .success(let image):
+                    cell.configure(with: image)
+                case .failure:
+                    cell.configureWithPlaceholder()
+                }
+            }
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView,
+                        didEndDisplaying cell: UICollectionViewCell,
+                        forItemAt indexPath: IndexPath) {
+        if indexPath.item < imageURLs.count {
+            let url = imageURLs[indexPath.item]
+            imageLoader.cancelLoad(for: url)
+        }
     }
 }
 

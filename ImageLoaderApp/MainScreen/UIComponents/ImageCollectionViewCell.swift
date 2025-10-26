@@ -12,7 +12,7 @@ class ImageCollectionViewCell: UICollectionViewCell {
 
     private let imageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFill
+        imageView.contentMode = .scaleToFill
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 8
         return imageView
@@ -55,8 +55,8 @@ extension ImageCollectionViewCell {
     func configureWithPlaceholder() {
         spinner.stopAnimating()
         // simple placeholder
-        imageView.image = UIImage(systemName: "photo")
-        imageView.contentMode = .center
+        imageView.image = UIImage(systemName: "exclamationmark.triangle")
+        imageView.tintColor = .systemOrange
     }
 }
 
