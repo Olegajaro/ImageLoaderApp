@@ -5,7 +5,6 @@
 //  Created by Олег Федоров on 26.10.2025.
 //
 
-import Foundation
 import UIKit
 
 enum ImageDownloadError: LocalizedError {
@@ -61,24 +60,35 @@ final class ImageDownloader {
 
 // MARK: - Private Helper Methods
 private extension ImageDownloader {
+    /// Determines whether a new download task should be started for the given URL
+    /// Implements download deduplication by tracking completion handlers for each URL.
+    /// If URL is already being downloaded, adds completion to existing handlers instead of starting new download.
+    /// - Parameters:
+    ///   - url: The URL for which download is requested
+    ///   - completion: Completion handler to be called when download finishes
+    /// - Returns: Boolean indicating whether a new download task should be started (true)
+    ///            or completion was added to existing download (false)
     func shouldStartNewDownloadTask(
         for url: URL,
         completion: @escaping (Result<UIImage, ImageDownloadError>) -> Void
     ) -> Bool {
         return lock.withLock {
             if var existingCompletions = completions[url] {
-                // URL is already downloading, add completion to existing ones
                 existingCompletions.append(completion)
                 completions[url] = existingCompletions
                 return false
             } else {
-                // First request for this URL, create new completions list
                 completions[url] = [completion]
                 return true
             }
         }
     }
     
+    /// Stores the URLSessionDataTask and starts it immediately
+    /// Thread-safely associates the task with the URL and begins network request
+    /// - Parameters:
+    ///   - task: The URLSessionDataTask to be stored and started
+    ///   - url: The URL associated with this task for tracking and management
     func storeAndStartTask(_ task: URLSessionDataTask, for url: URL) {
         lock.withLock {
             runningTasks[url] = task
@@ -86,12 +96,19 @@ private extension ImageDownloader {
         task.resume()
     }
     
+    /// Processes the download result for a specific URL
+    /// Validates the response, extracts completions, and notifies all waiting handlers
+    /// - Parameters:
+    ///   - url: The URL for which download completed
+    ///   - data: Raw image data received from the server
+    ///   - response: URLResponse containing HTTP status and headers
+    ///   - error: Network error if the download failed
     func handleDownloadResult(url: URL, data: Data?,
                               response: URLResponse?, error: Error?) {
         let allCompletions = extractCompletionsAndCleanup(for: url)
         
-        if let result = validateDownloadResult(data: data, response: response, error: error) {
-            notifyCompletions(allCompletions, with: result)
+        if let badResult = validateDownloadResult(data: data, response: response, error: error) {
+            notifyCompletions(allCompletions, with: badResult)
             return
         }
         
@@ -100,6 +117,10 @@ private extension ImageDownloader {
         notifyCompletions(allCompletions, with: .success(image))
     }
     
+    /// Extracts all completion handlers for a URL and cleans up related data
+    /// Thread-safely removes the URL from tracking dictionaries
+    /// - Parameter url: The URL to extract and clean up
+    /// - Returns: Array of completion handlers waiting for this URL's result
     func extractCompletionsAndCleanup(for url: URL) -> [((Result<UIImage, ImageDownloadError>) -> Void)] {
         return lock.withLock {
             let completionsForURL = completions[url] ?? []
@@ -109,36 +130,40 @@ private extension ImageDownloader {
         }
     }
     
+    /// Validates the image download result and returns corresponding Result
+    /// Performs sequential checks: network errors, HTTP status code, data presence,
+    /// image validity. Returns nil if all checks pass successfully.
+    /// - Parameters:
+    ///   - data: Data received from the download. Can be nil or empty.
+    ///   - response: HTTP response from the server. Used for status code validation.
+    ///   - error: Network error if occurred during download.
+    /// - Returns: Result with ImageDownloadError if validation fails,
+    ///            or nil if data passed all checks and is ready to use.
     func validateDownloadResult(data: Data?,
                                 response: URLResponse?,
                                 error: Error?) -> Result<UIImage, ImageDownloadError>? {
-        // Check for network error
-        if let error = error {
+        if let error {
             return .failure(.networkError(error))
         }
         
-        // Check HTTP status code
         if let httpResponse = response as? HTTPURLResponse,
            !(200...299).contains(httpResponse.statusCode) {
             return .failure(.httpError(statusCode: httpResponse.statusCode))
         }
         
-        // Check if data exists
-        guard let data = data else {
+        guard let data else {
             return .failure(.noDataReceived)
         }
         
-        // Check if data is not empty
         guard !data.isEmpty else {
             return .failure(.emptyData)
         }
         
-        // Check if we can create image from data
         guard UIImage(data: data) != nil else {
             return .failure(.invalidImageData)
         }
         
-        return nil // No error
+        return nil
     }
     
     func createImage(from data: Data?) -> UIImage? {
