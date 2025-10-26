@@ -35,6 +35,20 @@ final class DiskCache {
         }
     }
     
+    func deleteCache() {
+        ioQueue.async { [weak self] in
+            guard let self else { return }
+            do {
+                if self.fileManager.fileExists(atPath: self.cacheDirectory.path) {
+                    try self.fileManager.removeItem(at: self.cacheDirectory)
+                }
+                self.createCacheDirectoryIfNeeded() 
+            } catch {
+                print("DiskCache delete error:", error)
+            }
+        }
+    }
+    
     private func filePath(for url: URL) -> URL {
         let hashedName = sha256(url.absoluteString) + ".png"
         return cacheDirectory.appendingPathComponent(hashedName)
@@ -43,5 +57,11 @@ final class DiskCache {
     private func sha256(_ string: String) -> String {
         let digest = SHA256.hash(data: Data(string.utf8))
         return digest.compactMap { String(format: "%02x", $0) }.joined()
+    }
+    
+    private func createCacheDirectoryIfNeeded() {
+        if !fileManager.fileExists(atPath: cacheDirectory.path) {
+            try? fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+        }
     }
 }

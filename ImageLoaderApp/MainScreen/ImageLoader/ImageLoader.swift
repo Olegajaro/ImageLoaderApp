@@ -44,4 +44,9 @@ final class ImageLoader {
     func cancelLoad(for url: URL) {
         downloader.cancel(for: url)
     }
+    
+    func clearAllCaches() {
+        memoryCache.removeAllObjects()
+        diskCache.deleteCache()
+    }
 }

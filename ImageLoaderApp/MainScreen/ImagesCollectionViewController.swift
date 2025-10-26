@@ -26,15 +26,14 @@ final class ImagesCollectionViewController: UIViewController {
         return collectionView
     }()
     
+    private lazy var refreshControl: UIRefreshControl = {
+        let control = UIRefreshControl()
+        control.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
+        return control
+    }()
+    
     private let imageLoader = ImageLoader()
-    private var imageURLs = [
-        URL(string: "https://placehold.co/800x600/1E90FF/FFFFFF/png?text=Ocean+Blue")!,
-        URL(string: "https://placehold.co/800x600/FF8C00/FFFFFF/png?text=Sunset+Orange")!,
-        URL(string: "https://placehold.co/800x600/32CD32/FFFFFF/png?text=Fresh+Green")!,
-        URL(string: "https://placehold.co/800x600/8A2BE2/FFFFFF/png?text=Purple+Vibe")!,
-        URL(string: "https://placehold.co/800x600/DC143C/FFFFFF/png?text=Crimson+Red")!,
-        URL(string: "https://placehold.co/800x600/2F4F4F/FFFFFF/png?text=Dark+Slate")!,
-    ]
+    private var imageURLs = ImageURLProvider.getImageURLs()
     
     // MARK: - Lifecycle Methods
     override func viewDidLoad() {
@@ -67,6 +66,7 @@ private extension ImagesCollectionViewController {
     }
     
     func addCollectionView() {
+        collectionView.refreshControl = refreshControl
         view.addSubview(collectionView)
         NSLayoutConstraint.activate([
             collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -88,6 +88,22 @@ private extension ImagesCollectionViewController {
                 collectionView.layoutIfNeeded()
             }
         }
+    }
+    
+    @objc
+    func handleRefresh() {
+        // Clear caches
+        imageLoader.clearAllCaches()
+
+        imageURLs = ImageURLProvider.getImageURLs()
+        
+        // Update UI without animation
+        UIView.performWithoutAnimation {
+            collectionView.reloadData()
+        }
+        
+        // End refresh
+        refreshControl.endRefreshing()
     }
 }
 

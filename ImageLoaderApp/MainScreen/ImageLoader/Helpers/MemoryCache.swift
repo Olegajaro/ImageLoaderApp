@@ -17,4 +17,8 @@ final class MemoryCache {
     func insert(_ image: UIImage, forKey key: String) {
         cache.setObject(image, forKey: key as NSString)
     }
+    
+    func removeAllObjects() {
+        cache.removeAllObjects()
+    }
 }
