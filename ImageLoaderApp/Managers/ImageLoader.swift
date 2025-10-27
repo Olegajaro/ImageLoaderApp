@@ -15,9 +15,17 @@ protocol ImageLoaderProtocol: AnyObject {
 }
 
 final class ImageLoader: ImageLoaderProtocol {
-    private let memoryCache = MemoryCache()
-    private let diskCache = DiskCache()
-    private let downloader = ImageDownloader()
+    private let memoryCache: MemoryCacheProtocol
+    private let diskCache: DiskCacheProtocol
+    private let downloader: ImageDownloaderProtocol
+    
+    init(memoryCache: MemoryCacheProtocol = MemoryCache(),
+         diskCache: DiskCacheProtocol = DiskCache(),
+         downloader: ImageDownloaderProtocol = ImageDownloader()) {
+        self.memoryCache = memoryCache
+        self.diskCache = diskCache
+        self.downloader = downloader
+    }
     
     func loadImage(from url: URL,
                    completion: @escaping (Result<UIImage, ImageDownloadError>) -> Void) {

@@ -27,7 +27,6 @@ protocol ImagesViewProtocol: AnyObject {
 }
 
 final class ImagesPresenter {
-    
     // MARK: - Dependencies
     private weak var view: ImagesViewProtocol?
     private let imageLoader: ImageLoaderProtocol
@@ -78,12 +77,12 @@ extension ImagesPresenter: ImagesPresenterProtocol {
 // MARK: - Private Methods
 private extension ImagesPresenter {
     func loadInitialData() {
-        imageURLs = imageURLProvider.getSimpleImageURLs()
+        imageURLs = imageURLProvider.getImageURLs()
     }
     
     func refreshData() {
         imageLoader.clearAllCaches()
-        imageURLs = imageURLProvider.getSimpleImageURLs()
+        imageURLs = imageURLProvider.getImageURLs()
         view?.reloadDataWithoutAnimation()
         view?.endRefreshing()
     }

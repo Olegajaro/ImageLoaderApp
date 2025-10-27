@@ -13,15 +13,14 @@ protocol ImageURLProviderProtocol {
 }
 
 final class ImageURLProvider: ImageURLProviderProtocol {
-    // blocked in RF
     func getImageURLs() -> [URL] {
         let urlStrings = [
-            "https://picsum.photos/id/1015/800/600",
-            "https://picsum.photos/id/1025/800/600",
-            "https://picsum.photos/id/1035/800/600",
-            "https://picsum.photos/id/1045/800/600",
-            "https://picsum.photos/id/1055/800/600",
-            "https://picsum.photos/id/1065/800/600"
+            "https://loremflickr.com/800/600/dog?lock=1",
+            "https://loremflickr.com/800/600/cat?lock=2",
+            "https://loremflickr.com/800/600/nature?lock=3",
+            "https://loremflickr.com/1200/800/city?lock=4",
+            "https://loremflickr.com/1200/800/beach?lock=5",
+            "https://loremflickr.com/1200/800/mountain?lock=6"
         ]
         
         let urls = urlStrings.compactMap { URL(string: $0) }
