@@ -8,7 +8,13 @@
 import UIKit
 import CryptoKit
 
-final class DiskCache {
+protocol DiskCacheProtocol: AnyObject {
+    func load(for url: URL) -> UIImage?
+    func save(_ image: UIImage, for url: URL)
+    func deleteCache()
+}
+
+final class DiskCache: DiskCacheProtocol {
     private let fileManager = FileManager.default
     private let ioQueue = DispatchQueue(label: "com.imageLoader.diskCacheQueue", qos: .utility)
     

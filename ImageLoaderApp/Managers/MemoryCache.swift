@@ -7,7 +7,13 @@
 
 import UIKit
 
-final class MemoryCache {
+protocol MemoryCacheProtocol: AnyObject {
+    func image(forKey key: String) -> UIImage?
+    func insert(_ image: UIImage, forKey key: String)
+    func removeAllObjects()
+}
+
+final class MemoryCache: MemoryCacheProtocol {
     private let cache = NSCache<NSString, UIImage>()
     
     func image(forKey key: String) -> UIImage? {

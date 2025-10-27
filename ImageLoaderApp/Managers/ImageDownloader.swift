@@ -33,7 +33,13 @@ enum ImageDownloadError: LocalizedError {
     }
 }
 
-final class ImageDownloader {
+protocol ImageDownloaderProtocol: AnyObject {
+    func download(from url: URL,
+                  completion: @escaping (Result<UIImage, ImageDownloadError>) -> Void)
+    func cancel(for url: URL)
+}
+
+final class ImageDownloader: ImageDownloaderProtocol {
     private var runningTasks: [URL: URLSessionDataTask] = [:]
     private var completions: [URL: [(Result<UIImage, ImageDownloadError>) -> Void]] = [:]
     private let lock = NSLock()
